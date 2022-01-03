@@ -28,12 +28,12 @@ To use this Pack, follow these steps:
 This pack is still in testing and may need further refinements. Please feel free to modifiy as needed and share your improvements to the contact info below.
 
 ### Version 0.0.5 - 2022-1-03
-In this inital release, we've created the a pipleing for captureing and unrolling 
+In this inital release, we've created the a pipline for captureing and unrolling apple health data
 
 ## Contributing to the Pack
 To contribute to the Pack, please do the following:
 
-[Contributor instructions go here.]
+Discuss this pack on our Community Slack channel[`#packs`](https://cribl-community.slack.com/archives/C021UP7ETM3)
 
 
 ## Contact
@@ -41,4 +41,4 @@ To contact us please email <jhamblin@cribl.io>.
 
 
 ## License
-This Pack uses the following license: [`<license_name>`](https://link-to-license-example.com).
+This Pack uses the following license: [`Apache 2.0`](https://github.com/criblio/appscope/blob/master/LICENSE).
