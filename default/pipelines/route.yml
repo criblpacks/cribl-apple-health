@@ -1,0 +1,21 @@
+id: default
+groups: {}
+routes:
+  - id: EGXkTc
+    name: AppleHealth_Raw_HTTP_JSON
+    final: true
+    disabled: false
+    pipeline: AppleHealth
+    description: Apple Health Route for Raw HTTP JSON. Remember to use JSON with API export
+    clones: []
+    filter: __inputId=='http_raw:apple_health' && _raw.match(/apple/)
+    output: default
+  - id: default
+    name: default
+    final: true
+    disabled: false
+    pipeline: main
+    description: ""
+    clones: []
+    filter: "true"
+    output: default

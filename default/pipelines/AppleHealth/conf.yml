@@ -1,0 +1,237 @@
+output: default
+groups:
+  WhafM6:
+    name: Formatting
+    description: Unrolling Json and Parsing Event Fields
+    index: 0
+    disabled: false
+  VrXj1v:
+    name: Change QTY to UNIT value
+    description: " (Example qty == min)"
+    index: 1
+    disabled: false
+  sAkgye:
+    name: Heart Rate Transformation
+    description: Append "Heart_Rate" to field names for Min/Max/Avg
+    index: 2
+    disabled: false
+  e2FGBo:
+    name: Cleanup
+    description: Final Cleanup Steps
+    index: 3
+    disabled: false
+asyncFuncTimeout: 1000
+functions:
+  - id: comment
+    filter: "true"
+    disabled: false
+    conf:
+      comment: |
+        First, we need an Unroll the data.metrics.
+    groupId: WhafM6
+  - id: json_unroll
+    filter: "true"
+    disabled: null
+    conf:
+      path: data.metrics
+    groupId: WhafM6
+  - id: json_unroll
+    filter: "true"
+    disabled: null
+    conf:
+      path: data
+      name: data
+    groupId: WhafM6
+  - id: comment
+    filter: "true"
+    disabled: false
+    conf:
+      comment: Parser to extract fields in _raw and _raw.data
+    groupId: WhafM6
+  - id: serde
+    filter: "true"
+    disabled: false
+    conf:
+      mode: extract
+      type: json
+      srcField: _raw
+    description: Parse _raw to extract fields from JSON
+    groupId: WhafM6
+  - id: serde
+    filter: "true"
+    disabled: false
+    conf:
+      mode: extract
+      type: json
+      srcField: _raw.data
+    description: Parse _raw.data to extracts nested one layer down from raw in data
+    groupId: WhafM6
+  - id: eval
+    filter: "true"
+    disabled: null
+    conf:
+      add:
+        - name: index
+          value: "'apple_health'"
+        - name: sourcetype
+          value: name
+        - name: source
+          value: "'apple_health'"
+      remove: []
+    description: Splunk Fields
+    groupId: WhafM6
+  - id: eval
+    filter: sourcetype=='heart_rate'
+    disabled: null
+    conf:
+      add:
+        - name: sourcetype
+          value: "'apple_heart_rate'"
+    groupId: WhafM6
+    description: In some instances, sourcetype for HR is listed as heart_rate. This will
+      correct and make the sourcetype apple_heart_rate
+  - id: eval
+    filter: "true"
+    disabled: null
+    conf:
+      add:
+        - name: qty
+          value: data.qty
+        - name: date
+          value: data.date
+        - name: Avg
+          value: data.Avg
+        - name: Min
+          value: data.Min
+        - name: Max
+          value: data.Max
+      remove: []
+    description: Recreate nested fields UP one level
+    groupId: WhafM6
+  - id: rename
+    filter: name.match(/apple_exercise_time/)
+    disabled: false
+    conf:
+      wildcardDepth: 5
+      baseFields: []
+      renameExpr: "name=='qty' ? `${units}` : name"
+      rename: []
+    groupId: VrXj1v
+  - id: rename
+    filter: name.match(/apple_stand_time/)
+    disabled: false
+    conf:
+      wildcardDepth: 5
+      renameExpr: "name=='qty' ? `${units}` : name"
+    description: Change QTY to UNIT value (example qty >>> min)
+    groupId: VrXj1v
+  - id: comment
+    filter: "true"
+    disabled: false
+    conf:
+      comment: Rename Min/Max with HeartRate_min/max/avg for HR data
+    groupId: sAkgye
+  - id: rename
+    filter: name.match(/heart_rate/)
+    disabled: false
+    conf:
+      wildcardDepth: 5
+      rename:
+        - currentName: name
+          newName: HRunit
+    groupId: sAkgye
+  - id: rename
+    filter: HRunit.match(/heart_rate/)
+    disabled: false
+    conf:
+      wildcardDepth: 5
+      renameExpr: "name=='Min' ? `${HRunit}_${name}` : name"
+    groupId: sAkgye
+  - id: rename
+    filter: HRunit.match(/heart_rate/)
+    disabled: false
+    conf:
+      wildcardDepth: 5
+      renameExpr: "name=='Avg' ? `${HRunit}_${name}` : name"
+    groupId: sAkgye
+  - id: rename
+    filter: HRunit.match(/heart_rate/)
+    disabled: false
+    conf:
+      wildcardDepth: 5
+      renameExpr: "name=='Max' ? `${HRunit}_${name}` : name"
+    groupId: sAkgye
+  - id: eval
+    filter: HRunit.match(/heart_rate/)
+    disabled: false
+    conf:
+      add:
+        - name: name
+          value: "`apple_${HRunit}`"
+    groupId: sAkgye
+    description: add Name Field back to event
+  - id: comment
+    filter: "true"
+    disabled: false
+    conf:
+      comment: We are removing fields here to clean up the events.
+    groupId: e2FGBo
+  - id: auto_timestamp
+    filter: "true"
+    disabled: false
+    conf:
+      srcField: date
+      dstField: _time
+      defaultTimezone: America/Chicago
+      timeExpression: time.getTime() / 1000
+      offset: 0
+      maxLen: 150
+      defaultTime: now
+      latestDateAllowed: +1week
+      earliestDateAllowed: -420weeks
+      timestamps:
+        - strptime: "%Y-%m-%e %l:%M:%S %z"
+          regex: /([^$]{25})/
+    groupId: e2FGBo
+  - id: serde
+    filter: "true"
+    disabled: false
+    conf:
+      mode: extract
+      type: json
+      srcField: _raw
+      remove: []
+      dstField: __parsed
+    description: Extract all from _raw, to be serialized
+    groupId: e2FGBo
+  - id: serialize
+    filter: "true"
+    disabled: false
+    conf:
+      type: json
+      dstField: _raw
+      fields:
+        - "*"
+      srcField: __parsed
+    description: Place all event data back into _raw field
+    groupId: e2FGBo
+  - id: eval
+    filter: "true"
+    disabled: false
+    conf:
+      remove:
+        - data.metrics
+        - data.workouts
+        - units
+        - HRunit
+        - method
+        - path
+        - headers
+        - source
+        - clientip
+        - data
+        - cribl_breaker
+      add: []
+    description: clean up event
+    groupId: e2FGBo
+description: Pipeline for Apple Health Processing
