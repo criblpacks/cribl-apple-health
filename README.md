@@ -3,7 +3,7 @@
 
 This pack will aid in collection, transformation, and routeing of Apple Health metrics.  
 
-Apple Health data is notoriously difficult to collect for custome usecases. This pack is designed to leverage the LogStream observability pipeline to collect,shape, and route your health data. 
+Apple Health data is notoriously difficult to collect for custom usecases. This pack is designed to leverage the LogStream observability pipeline to collect,shape, and route your health data. 
 
 ## Requirements
 
